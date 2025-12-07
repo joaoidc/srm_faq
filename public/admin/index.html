@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SRM FAQ Admin</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Inter', sans-serif; background: #0f0f0f; color: #fff; min-height: 100vh; }
+    
+    .header { background: #1a1a1a; padding: 1rem 2rem; border-bottom: 1px solid #333; display: flex; justify-content: space-between; align-items: center; }
+    .logo { font-size: 1.25rem; font-weight: 700; display: flex; align-items: center; gap: 0.5rem; }
+    .logo span { background: linear-gradient(135deg, #6366f1, #a855f7); padding: 0.5rem; border-radius: 8px; }
+    
+    .nav { display: flex; gap: 0.5rem; }
+    .nav button { padding: 0.5rem 1rem; background: transparent; border: none; color: #888; font-size: 0.9rem; cursor: pointer; border-radius: 6px; }
+    .nav button:hover { background: #222; color: #fff; }
+    .nav button.active { background: #6366f1; color: #fff; }
+    
+    .main { max-width: 1200px; margin: 0 auto; padding: 2rem; }
+    .panel { display: none; }
+    .panel.active { display: block; }
+    
+    .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
+    .stat { background: #1a1a1a; padding: 1.5rem; border-radius: 12px; border: 1px solid #333; }
+    .stat-label { font-size: 0.8rem; color: #888; margin-bottom: 0.25rem; }
+    .stat-value { font-size: 1.75rem; font-weight: 700; color: #6366f1; }
+    
+    .card { background: #1a1a1a; border: 1px solid #333; border-radius: 12px; margin-bottom: 1.5rem; }
+    .card-header { padding: 1rem 1.5rem; border-bottom: 1px solid #333; display: flex; justify-content: space-between; align-items: center; }
+    .card-title { font-weight: 600; }
+    .card-body { padding: 1.5rem; }
+    
+    .form-group { margin-bottom: 1rem; }
+    .form-label { display: block; font-size: 0.85rem; color: #888; margin-bottom: 0.5rem; }
+    .form-input, .form-textarea { width: 100%; padding: 0.75rem; background: #0f0f0f; border: 1px solid #333; border-radius: 8px; color: #fff; font-family: inherit; }
+    .form-input:focus, .form-textarea:focus { outline: none; border-color: #6366f1; }
+    .form-textarea { min-height: 120px; resize: vertical; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    
+    .btn { padding: 0.75rem 1.5rem; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; font-family: inherit; }
+    .btn-primary { background: #6366f1; color: #fff; }
+    .btn-primary:hover { background: #5558e3; }
+    .btn-sm { padding: 0.4rem 0.75rem; font-size: 0.8rem; }
+    .btn-danger { background: transparent; color: #ef4444; border: 1px solid #ef4444; }
+    .btn-danger:hover { background: #ef4444; color: #fff; }
+    
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 0.75rem; text-align: left; border-bottom: 1px solid #333; }
+    th { font-size: 0.75rem; color: #888; text-transform: uppercase; }
+    .actions { display: flex; gap: 0.5rem; }
+    
+    .chat-container { display: grid; grid-template-columns: 1fr 300px; gap: 1rem; height: 500px; }
+    .chat-main { background: #1a1a1a; border: 1px solid #333; border-radius: 12px; display: flex; flex-direction: column; }
+    .chat-messages { flex: 1; padding: 1rem; overflow-y: auto; display: flex; flex-direction: column; gap: 0.75rem; }
+    .msg { max-width: 80%; padding: 0.75rem 1rem; border-radius: 12px; font-size: 0.9rem; white-space: pre-wrap; }
+    .msg-user { align-self: flex-end; background: #6366f1; }
+    .msg-bot { align-self: flex-start; background: #333; }
+    .chat-input-row { padding: 1rem; border-top: 1px solid #333; display: flex; gap: 0.5rem; }
+    .chat-input { flex: 1; padding: 0.75rem; background: #0f0f0f; border: 1px solid #333; border-radius: 8px; color: #fff; }
+    .chat-sidebar { background: #1a1a1a; border: 1px solid #333; border-radius: 12px; padding: 1rem; overflow-y: auto; }
+    .sidebar-title { font-size: 0.75rem; color: #888; text-transform: uppercase; margin-bottom: 0.75rem; }
+    .source { background: #0f0f0f; padding: 0.75rem; border-radius: 8px; margin-bottom: 0.5rem; font-size: 0.85rem; }
+    .source-sim { color: #22c55e; font-size: 0.75rem; }
+    
+    .toast { position: fixed; bottom: 2rem; right: 2rem; padding: 1rem 1.5rem; background: #1a1a1a; border: 1px solid #333; border-radius: 8px; }
+    .toast-success { border-left: 3px solid #22c55e; }
+    .toast-error { border-left: 3px solid #ef4444; }
+    
+    .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; z-index: 100; opacity: 0; visibility: hidden; }
+    .modal.active { opacity: 1; visibility: visible; }
+    .modal-content { background: #1a1a1a; border: 1px solid #333; border-radius: 12px; width: 100%; max-width: 500px; }
+    .modal-header { padding: 1rem 1.5rem; border-bottom: 1px solid #333; display: flex; justify-content: space-between; }
+    .modal-close { background: none; border: none; color: #888; font-size: 1.5rem; cursor: pointer; }
+    .modal-body { padding: 1.5rem; }
+    .modal-footer { padding: 1rem 1.5rem; border-top: 1px solid #333; display: flex; justify-content: flex-end; gap: 0.5rem; }
+    
+    @media (max-width: 768px) {
+      .form-row { grid-template-columns: 1fr; }
+      .chat-container { grid-template-columns: 1fr; }
+      .chat-sidebar { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <div class="logo"><span>📚</span> SRM FAQ</div>
+    <nav class="nav">
+      <button class="active" data-panel="home">Início</button>
+      <button data-panel="list">Respostas</button>
+      <button data-panel="chat">Chat</button>
+    </nav>
+  </header>
+
+  <main class="main">
+    <!-- HOME -->
+    <div id="home" class="panel active">
+      <div class="stats">
+        <div class="stat"><div class="stat-label">Total</div><div class="stat-value" id="s-total">-</div></div>
+        <div class="stat"><div class="stat-label">Ativas</div><div class="stat-value" id="s-active">-</div></div>
+        <div class="stat"><div class="stat-label">Conversas</div><div class="stat-value" id="s-chats">-</div></div>
+        <div class="stat"><div class="stat-label">Categorias</div><div class="stat-value" id="s-cats">-</div></div>
+      </div>
+      
+      <div class="card">
+        <div class="card-header"><h2 class="card-title">Adicionar Resposta</h2></div>
+        <div class="card-body">
+          <form id="add-form">
+            <div class="form-group">
+              <label class="form-label">Título / Assunto *</label>
+              <input type="text" class="form-input" id="f-title" placeholder="Ex: Redefinição de senha" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Conteúdo / Resposta *</label>
+              <textarea class="form-textarea" id="f-content" placeholder="Digite a resposta completa que será usada pelo assistente..." required></textarea>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Categoria</label>
+                <input type="text" class="form-input" id="f-category" placeholder="Ex: Conta, Pagamento">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Tags (vírgula)</label>
+                <input type="text" class="form-input" id="f-tags" placeholder="Ex: senha, login, acesso">
+              </div>
+            </div>
+            <button type="submit" class="btn btn-primary">💾 Salvar</button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- LIST -->
+    <div id="list" class="panel">
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">Respostas Cadastradas</h2>
+          <button class="btn btn-sm btn-primary" onclick="loadList()">🔄</button>
+        </div>
+        <table>
+          <thead><tr><th>ID</th><th>Título</th><th>Categoria</th><th>Ações</th></tr></thead>
+          <tbody id="list-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- CHAT -->
+    <div id="chat" class="panel">
+      <div class="chat-container">
+        <div class="chat-main">
+          <div class="chat-messages" id="chat-msgs">
+            <div class="msg msg-bot">Olá! 👋 Sou o assistente do SRM. Como posso ajudar?</div>
+          </div>
+          <div class="chat-input-row">
+            <input type="text" class="chat-input" id="chat-input" placeholder="Digite sua pergunta..." onkeypress="if(event.key==='Enter')sendChat()">
+            <button class="btn btn-primary" onclick="sendChat()">Enviar</button>
+          </div>
+        </div>
+        <div class="chat-sidebar">
+          <div class="sidebar-title">Fontes</div>
+          <div id="chat-sources"><p style="color:#666;font-size:0.85rem">Envie uma pergunta para ver as fontes.</p></div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- MODAL -->
+  <div class="modal" id="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Editar</h3>
+        <button class="modal-close" onclick="closeModal()">×</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="e-id">
+        <div class="form-group">
+          <label class="form-label">Título</label>
+          <input type="text" class="form-input" id="e-title">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Conteúdo</label>
+          <textarea class="form-textarea" id="e-content"></textarea>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Categoria</label>
+            <input type="text" class="form-input" id="e-category">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Tags</label>
+            <input type="text" class="form-input" id="e-tags">
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn" onclick="closeModal()">Cancelar</button>
+        <button class="btn btn-primary" onclick="saveEdit()">Salvar</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API = '/api/knowledge';
+    let sessionId = null;
+
+    // NAV
+    document.querySelectorAll('.nav button').forEach(btn => {
+      btn.onclick = () => {
+        document.querySelectorAll('.nav button').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById(btn.dataset.panel).classList.add('active');
+        if (btn.dataset.panel === 'list') loadList();
+        if (btn.dataset.panel === 'home') loadStats();
+      };
+    });
+
+    // TOAST
+    function toast(msg, type = 'success') {
+      const t = document.createElement('div');
+      t.className = `toast toast-${type}`;
+      t.textContent = msg;
+      document.body.appendChild(t);
+      setTimeout(() => t.remove(), 3000);
+    }
+
+    // STATS
+    async function loadStats() {
+      try {
+        const r = await fetch(`${API}/stats`);
+        const { data } = await r.json();
+        document.getElementById('s-total').textContent = data.total;
+        document.getElementById('s-active').textContent = data.active;
+        document.getElementById('s-chats').textContent = data.chats;
+        document.getElementById('s-cats').textContent = data.categories;
+      } catch {}
+    }
+
+    // ADD
+    document.getElementById('add-form').onsubmit = async (e) => {
+      e.preventDefault();
+      const data = {
+        title: document.getElementById('f-title').value,
+        content: document.getElementById('f-content').value,
+        category: document.getElementById('f-category').value || null,
+        tags: document.getElementById('f-tags').value ? document.getElementById('f-tags').value.split(',').map(t => t.trim()) : null
+      };
+      try {
+        const r = await fetch(API, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+        const res = await r.json();
+        if (res.success) {
+          toast('Salvo com sucesso!');
+          e.target.reset();
+          loadStats();
+        } else {
+          toast(res.message, 'error');
+        }
+      } catch (err) {
+        toast('Erro ao salvar', 'error');
+      }
+    };
+
+    // LIST
+    async function loadList() {
+      const tbody = document.getElementById('list-body');
+      tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:#666">Carregando...</td></tr>';
+      try {
+        const r = await fetch(`${API}?includeInactive=true`);
+        const { data } = await r.json();
+        if (data.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:#666">Nenhuma resposta cadastrada</td></tr>';
+          return;
+        }
+        tbody.innerHTML = data.map(i => `
+          <tr>
+            <td>#${i.id}</td>
+            <td>${esc(i.title)}</td>
+            <td>${i.category || '-'}</td>
+            <td class="actions">
+              <button class="btn btn-sm" onclick="editItem(${i.id})">✏️</button>
+              <button class="btn btn-sm btn-danger" onclick="deleteItem(${i.id})">🗑️</button>
+            </td>
+          </tr>
+        `).join('');
+      } catch {
+        tbody.innerHTML = '<tr><td colspan="4" style="color:#ef4444">Erro ao carregar</td></tr>';
+      }
+    }
+
+    // EDIT
+    async function editItem(id) {
+      const r = await fetch(`${API}/${id}`);
+      const { data } = await r.json();
+      document.getElementById('e-id').value = data.id;
+      document.getElementById('e-title').value = data.title;
+      document.getElementById('e-content').value = data.content;
+      document.getElementById('e-category').value = data.category || '';
+      document.getElementById('e-tags').value = data.tags ? data.tags.join(', ') : '';
+      document.getElementById('modal').classList.add('active');
+    }
+
+    async function saveEdit() {
+      const id = document.getElementById('e-id').value;
+      const data = {
+        title: document.getElementById('e-title').value,
+        content: document.getElementById('e-content').value,
+        category: document.getElementById('e-category').value || null,
+        tags: document.getElementById('e-tags').value ? document.getElementById('e-tags').value.split(',').map(t => t.trim()) : null
+      };
+      try {
+        const r = await fetch(`${API}/${id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+        const res = await r.json();
+        if (res.success) {
+          toast('Atualizado!');
+          closeModal();
+          loadList();
+        } else {
+          toast(res.message, 'error');
+        }
+      } catch {
+        toast('Erro', 'error');
+      }
+    }
+
+    function closeModal() {
+      document.getElementById('modal').classList.remove('active');
+    }
+
+    // DELETE
+    async function deleteItem(id) {
+      if (!confirm('Excluir?')) return;
+      try {
+        await fetch(`${API}/${id}`, { method: 'DELETE' });
+        toast('Excluído!');
+        loadList();
+        loadStats();
+      } catch {
+        toast('Erro', 'error');
+      }
+    }
+
+    // CHAT
+    async function sendChat() {
+      const input = document.getElementById('chat-input');
+      const msg = input.value.trim();
+      if (!msg) return;
+
+      const msgs = document.getElementById('chat-msgs');
+      msgs.innerHTML += `<div class="msg msg-user">${esc(msg)}</div>`;
+      input.value = '';
+      msgs.scrollTop = msgs.scrollHeight;
+
+      const loadId = Date.now();
+      msgs.innerHTML += `<div class="msg msg-bot" id="l${loadId}">⏳ Pensando...</div>`;
+      msgs.scrollTop = msgs.scrollHeight;
+
+      try {
+        const r = await fetch(`${API}/chat`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: msg, sessionId })
+        });
+        const { data } = await r.json();
+        document.getElementById(`l${loadId}`).remove();
+        
+        sessionId = data.sessionId;
+        msgs.innerHTML += `<div class="msg msg-bot">${esc(data.answer)}</div>`;
+        
+        const sources = document.getElementById('chat-sources');
+        if (data.sources && data.sources.length > 0) {
+          sources.innerHTML = data.sources.map(s => `
+            <div class="source">
+              <strong>${esc(s.title)}</strong>
+              <div class="source-sim">${(s.similarity * 100).toFixed(0)}% relevante</div>
+            </div>
+          `).join('');
+        } else {
+          sources.innerHTML = '<p style="color:#666;font-size:0.85rem">Nenhuma fonte encontrada</p>';
+        }
+      } catch {
+        document.getElementById(`l${loadId}`).textContent = 'Erro. Tente novamente.';
+      }
+      msgs.scrollTop = msgs.scrollHeight;
+    }
+
+    function esc(s) {
+      const d = document.createElement('div');
+      d.textContent = s;
+      return d.innerHTML;
+    }
+
+    // INIT
+    loadStats();
+  </script>
+</body>
+</html>
