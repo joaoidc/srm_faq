@@ -20,6 +20,6 @@ export class ConfigService {
 
   get embeddingDimensions(): number {
     // nomic-embed-text usa 768 dimensões
-    return 384;
+    return 768;
   }
 }
