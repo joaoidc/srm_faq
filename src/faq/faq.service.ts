@@ -20,7 +20,6 @@ export class FaqService {
   ) {}
 
   async create(dto: CreateFaqDto): Promise<FaqEntity> {
-    // Gerar embedding da pergunta + resposta para melhor matching
     const textToEmbed = `${dto.question} ${dto.answer}`;
     const embedding = await this.ollamaService.generateEmbedding(textToEmbed);
     const embeddingStr = `[${embedding.join(',')}]`;
@@ -81,7 +80,6 @@ export class FaqService {
       params.push(dto.is_active);
     }
 
-    // Regerar embedding se texto mudou
     if (dto.question !== undefined || dto.answer !== undefined) {
       const newQuestion = dto.question ?? existing.question;
       const newAnswer = dto.answer ?? existing.answer;
@@ -115,14 +113,12 @@ export class FaqService {
 
   async search(
     query: string,
-    threshold = 0.3,
+    threshold = 0.5,
     limit = 5,
   ): Promise<SearchResult[]> {
-    // Gerar embedding da query usando Ollama
     const queryEmbedding = await this.ollamaService.generateEmbedding(query);
     const embeddingStr = `[${queryEmbedding.join(',')}]`;
 
-    // Buscar FAQs similares
     const results = await this.databaseService.query<SearchResult>(
       `SELECT * FROM search_similar_faqs($1::vector, $2, $3)`,
       [embeddingStr, threshold, limit],
@@ -134,17 +130,24 @@ export class FaqService {
   async chat(message: string, sessionId?: string): Promise<ChatResponse> {
     const resolvedSessionId = sessionId || uuidv4();
 
-    // Buscar FAQs relevantes
-    const searchResults = await this.search(message, 0.3, 3);
+    // Buscar FAQs relevantes com threshold ALTO (0.6 = 60% similaridade mínima)
+    const searchResults = await this.search(message, 0.6, 3);
 
     let answer: string;
 
-    if (searchResults.length === 0) {
-      answer = 'Olá! Desculpe, não encontrei uma resposta específica para sua pergunta. ' +
-               'Você poderia reformular sua dúvida ou entrar em contato com nosso suporte ' +
-               'para uma assistência mais personalizada?';
+    // Verificar se encontrou resultado relevante
+    const hasRelevantResult = searchResults.length > 0 && searchResults[0].similarity >= 0.6;
+
+    if (!hasRelevantResult) {
+      // Não encontrou FAQ relevante - resposta padrão
+      answer = 'Olá! Sou o assistente virtual do SRM e posso ajudar apenas com dúvidas sobre o sistema. ' +
+               'Por exemplo, posso ajudar com:\n\n' +
+               '• Como redefinir senha\n' +
+               '• Formas de pagamento\n' +
+               '• Como usar funcionalidades do sistema\n\n' +
+               'Como posso ajudar você hoje?';
     } else {
-      // Usar Groq para humanizar a resposta (super rápido!)
+      // Encontrou FAQ relevante - usar Groq para humanizar
       const bestMatch = searchResults[0];
       answer = await this.groqService.humanizeResponse(
         bestMatch.answer,
@@ -163,7 +166,7 @@ export class FaqService {
 
     return {
       answer,
-      sources: searchResults,
+      sources: hasRelevantResult ? searchResults : [],
       sessionId: resolvedSessionId,
     };
   }
