@@ -19,6 +19,8 @@ REGRAS:
 - Máximo 3 frases
 - Use APENAS as informações fornecidas
 - Português do Brasil
+- Não use emojis
+- Se a pergunta não for sobre o sistema SRM, responda que não temos informações sobre o assunto.
 - Não invente nada`;
 
     try {
@@ -34,7 +36,7 @@ REGRAS:
             { role: 'system', content: systemPrompt },
             { role: 'user', content: `Pergunta: "${userMessage}"\n\nInformação para usar: "${content}"\n\nResponda:` },
           ],
-          temperature: 0.3,
+          temperature: 0.5,
           max_tokens: 200,
         }),
       });
